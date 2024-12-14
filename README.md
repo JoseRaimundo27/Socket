@@ -67,6 +67,11 @@ Este projeto implementa um sistema de chat com suporte a comunicações privadas
      /tcp <nome_destinatario> Esta mensagem é privada.
      ```
 
+| **Protocolo** | **Aplicação**           | **Vantagens**                                                                                      |
+|---------------|-------------------------|----------------------------------------------------------------------------------------------------|
+| **TCP**       | Mensagens privadas      | Conexão confiável, entrega garantida, ordem preservada, ideal para conversas entre dois usuários.  |
+| **UDP**       | Mensagens globais       | Comunicação rápida e eficiente para vários clientes, adequado para mensagens não críticas.         |
+
 ### Exemplos de Uso
 
 #### Comunicação Global (UDP):
