@@ -95,7 +95,11 @@ Apenas o Cliente B recebe:
 [TCP] Privado de A: Olá, B!
 ```
 
-## Considerações Finais
+## TO DO
 
-Este projeto é uma demonstração prática de como combinar sockets TCP e UDP em um sistema de comunicação. Ele pode ser expandido com funcionalidades adicionais, como autenticação avançada, criptografia ou suporte a mensagens offline.
-
+ver vídeo: https://www.youtube.com/watch?v=j4b5C0kh6jc
+Cadastro de usuários.
+Transferência de arquivos entre clientes.
+Mecanismos básicos de autenticação (login/senha).
+Criptografia básica para troca de mensagens (ex.: AES ou RSA).
+Controle de tráfego (ex.: limitar o número de conexões simultâneas por cliente).
