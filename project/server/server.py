@@ -76,6 +76,12 @@ class Server:
                 if msg.startswith("/tcp"):
                     _, recipient, message = msg.split(' ', 2)
                     self.send_direct_message(username, recipient, message)
+
+                elif msg.startswith("/logout"):
+                    logging.info(f"{username} se desconectou do servidor.")
+                    conn.sendall("Você foi deslogado com sucesso.".encode('utf-8'))
+                    break
+
         except ConnectionResetError:
             logging.warning(f"Conexão perdida com {username}")
         finally:
