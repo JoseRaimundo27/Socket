@@ -24,6 +24,7 @@ Este projeto implementa um sistema de chat com suporte a comunicações privadas
 - Python
 - Sockets (TCP/UDP)
 - Multithreading para suportar múltiplas conexões simultâneas.
+- Criptografia (AES)
 
 ## Como Usar
 
@@ -102,9 +103,6 @@ Apenas o Cliente B recebe:
 
 ## TO DO
 
-ver vídeo: https://www.youtube.com/watch?v=j4b5C0kh6jc
-Cadastro de usuários.
-Transferência de arquivos entre clientes.
-Mecanismos básicos de autenticação (login/senha).
-Criptografia básica para troca de mensagens (ex.: AES ou RSA).
-Controle de tráfego (ex.: limitar o número de conexões simultâneas por cliente).
+- ver vídeo: https://www.youtube.com/watch?v=j4b5C0kh6jc
+- Transferência de arquivos entre clientes.
+- Controle de tráfego (ex.: limitar o número de conexões simultâneas por cliente).
