@@ -4,8 +4,6 @@ from cryptography.hazmat.backends import default_backend
 import os
 import base64
 
-
-
 class AES:
     def __init__(self, key=None):
         """
