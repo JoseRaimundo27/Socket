@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 class Server:
     PORT_TCP = 8080
     PORT_UDP = 8081
-    ADDR = '127.0.0.1'
+    ADDR = '0.0.0.0'
     CLIENTS = {}  # Mapeia nomes de usuários às informações do cliente (TCP, UDP e chave AES)
     CREDENTIALS = {}  # Mapeia nomes de usuários às senhas
     MAX_CONNECTIONS = 10  # Limite de conexões simultâneas

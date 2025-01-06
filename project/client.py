@@ -6,7 +6,7 @@ from crypto import AES  # Importar o módulo de criptografia
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 
 class Client:
-    SERVER_ADDR = '127.0.0.1'
+    SERVER_ADDR = '192.168.0.108'
     PORT_TCP = 8080
     PORT_UDP = 8081
 

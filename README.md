@@ -103,6 +103,5 @@ Apenas o Cliente B recebe:
 
 ## TO DO
 
-- ver vídeo: https://www.youtube.com/watch?v=j4b5C0kh6jc
 - Transferência de arquivos entre clientes.
-- Controle de tráfego (ex.: limitar o número de conexões simultâneas por cliente).
+- Colocar 0.0.0.0 no servidor ( para escutar) e o ip do servidor no cliente!
