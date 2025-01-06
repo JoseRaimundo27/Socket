@@ -11,6 +11,7 @@ class Server:
     ADDR = '127.0.0.1'
     CLIENTS = {}  # Mapeia nomes de usuários às informações do cliente (TCP, UDP e chave AES)
     CREDENTIALS = {}  # Mapeia nomes de usuários às senhas
+    MAX_CONNECTIONS = 10  # Limite de conexões simultâneas
 
     def start(self):
         self.TCP = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -28,6 +29,14 @@ class Server:
         try:
             while True:
                 conn, addr = self.TCP.accept()
+                
+                # Verifica se o número máximo de conexões foi atingido
+                if len(self.CLIENTS) >= self.MAX_CONNECTIONS:
+                    logging.warning("Número máximo de conexões atingido.")
+                    conn.sendall("Número máximo de conexões atingido. Tente novamente mais tarde.".encode('utf-8'))
+                    conn.close()
+                    continue
+                
                 threading.Thread(target=self.authenticate_client, args=(conn, addr)).start()
         except KeyboardInterrupt:
             logging.info("Servidor encerrando...")
