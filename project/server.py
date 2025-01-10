@@ -88,22 +88,14 @@ class Server:
                     break
 
                 msg = aes.decrypt(encrypted_data.decode('utf-8'))
-                
-                if msg.startswith("/file"):
-                    _, recipient, filename = msg.split(' ', 2)
-                    self.CLIENTS[recipient]["tcp"].sendall(encrypted_data)  # Envia o comando inicial
-                    logging.info(f"Transferência de arquivo iniciada: {filename} de {username} para {recipient}")
+                if msg.startswith("/tcp"):
+                    _, recipient, message = msg.split(' ', 2)
+                    self.send_direct_message(username, recipient, message)
 
-                elif msg.startswith("/file_end"):
-                    recipient = self.find_recipient(username)  # Função para identificar destinatário
-                    if recipient:
-                        self.CLIENTS[recipient]["tcp"].sendall(encrypted_data)
-                    logging.info(f"Transferência de arquivo concluída de {username}")
-
-                else:
-                    recipient = self.find_recipient(username)
-                    if recipient:
-                        self.CLIENTS[recipient]["tcp"].sendall(encrypted_data)
+                elif msg.startswith("/logout"):
+                    logging.info(f"{username} se desconectou do servidor.")
+                    conn.sendall(aes.encrypt("Você foi deslogado com sucesso.").encode('utf-8'))
+                    break
 
         except ConnectionResetError:
             logging.warning(f"Conexão perdida com {username}")
@@ -160,8 +152,6 @@ class Server:
                     logging.info(f"Mensagem global enviada de {sender} para {username}: {message}")
                 except Exception as e:
                     logging.warning(f"Erro ao enviar mensagem UDP para {username}: {e}")
-
-    
 
 if __name__ == "__main__":
     server = Server()
