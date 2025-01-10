@@ -9,7 +9,7 @@ class Server:
     PORT_TCP = 8080
     PORT_UDP = 8081
     ADDR = '0.0.0.0'
-    CLIENTS = {}  # Mapeia nomes de usuários às informações do cliente (TCP, UDP e chave AES)
+    CLIENTS = {}  # Mapeia nomes de usuários às informações do cliente (TCP, endereço UDP e chave AES)
     CREDENTIALS = {}  # Mapeia nomes de usuários às senhas
     MAX_CONNECTIONS = 10  # Limite de conexões simultâneas
 
@@ -29,14 +29,13 @@ class Server:
         try:
             while True:
                 conn, addr = self.TCP.accept()
-                
-                # Verifica se o número máximo de conexões foi atingido
+
                 if len(self.CLIENTS) >= self.MAX_CONNECTIONS:
                     logging.warning("Número máximo de conexões atingido.")
                     conn.sendall("Número máximo de conexões atingido. Tente novamente mais tarde.".encode('utf-8'))
                     conn.close()
                     continue
-                
+
                 threading.Thread(target=self.authenticate_client, args=(conn, addr)).start()
         except KeyboardInterrupt:
             logging.info("Servidor encerrando...")
@@ -46,7 +45,6 @@ class Server:
 
     def authenticate_client(self, conn, addr):
         try:
-            # Receber a chave AES do cliente
             aes_key = conn.recv(32)
             aes = AES(key=aes_key)
 
@@ -60,7 +58,7 @@ class Server:
                         conn.sendall(aes.encrypt("Nome de usuário já em uso.").encode('utf-8'))
                     else:
                         self.CREDENTIALS[username] = password
-                        self.CLIENTS[username] = {"tcp": conn, "udp": None, "aes": aes}
+                        self.CLIENTS[username] = {"tcp": conn, "addr": None, "aes": aes}
                         conn.sendall(aes.encrypt("SUCCESS").encode('utf-8'))
                         logging.info(f"Novo cliente registrado: {username} ({addr})")
                         self.handleTCP(conn, username)
@@ -69,7 +67,7 @@ class Server:
                 elif data.startswith("/login"):
                     _, username, password = data.split(' ', 2)
                     if username in self.CREDENTIALS and self.CREDENTIALS[username] == password:
-                        self.CLIENTS[username] = {"tcp": conn, "udp": None, "aes": aes}
+                        self.CLIENTS[username] = {"tcp": conn, "addr": None, "aes": aes}
                         conn.sendall(aes.encrypt("SUCCESS").encode('utf-8'))
                         logging.info(f"Cliente autenticado: {username} ({addr})")
                         self.handleTCP(conn, username)
@@ -112,18 +110,21 @@ class Server:
                 data, addr = self.UDP.recvfrom(1024)
                 encrypted_msg = data.decode('utf-8')
 
-                # Descriptografar a mensagem recebida
                 for username, info in self.CLIENTS.items():
                     aes = info["aes"]
                     try:
                         msg = aes.decrypt(encrypted_msg)
                         if msg.startswith("/udp"):
                             sender, message = msg[5:].split(':', 1)
-                            if sender in self.CLIENTS:
-                                self.CLIENTS[sender]["udp"] = addr
+
+                            if info["addr"] is None:
+                                info["addr"] = addr
+                                join_message = f"{sender} joined the global chat."
+                                self.send_message_to_all("Server", join_message)
+
                             self.send_message_to_all(sender.strip(), message.strip())
-                        break
-                    except:
+                            break
+                    except Exception:
                         continue
             except Exception as e:
                 logging.warning(f"Erro no UDP: {e}")
@@ -143,11 +144,11 @@ class Server:
 
     def send_message_to_all(self, sender, message):
         for username, info in self.CLIENTS.items():
-            if info["udp"]:
+            if info["addr"]:
                 try:
                     aes = info["aes"]
                     encrypted_message = aes.encrypt(f"[{sender}]: {message}")
-                    self.UDP.sendto(encrypted_message.encode('utf-8'), info["udp"])
+                    self.UDP.sendto(encrypted_message.encode('utf-8'), info["addr"])
                     logging.info(f"Mensagem global enviada de {sender} para {username}: {message}")
                 except Exception as e:
                     logging.warning(f"Erro ao enviar mensagem UDP para {username}: {e}")
