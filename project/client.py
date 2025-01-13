@@ -6,7 +6,7 @@ from crypto import AES
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 
 class Client:
-    SERVER_ADDR = '192.168.1.5'
+    SERVER_ADDR = '192.168.0.108'
     PORT_TCP = 8080
     PORT_UDP = 8081
 
@@ -72,7 +72,7 @@ class Client:
                 message = input()
 
                 if message.startswith("/global"):
-                    udp_message = message[5:]
+                    udp_message = message[8:]
                     full_message = f"/global {self.username}: {udp_message}"
                     encrypted_message = self.aes.encrypt(full_message)
                     self.UDP.sendto(encrypted_message.encode('utf-8'), (self.SERVER_ADDR, self.PORT_UDP))

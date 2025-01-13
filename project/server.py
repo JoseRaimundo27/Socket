@@ -119,7 +119,7 @@ class Server:
                     try:
                         msg = aes.decrypt(encrypted_msg)
                         if msg.startswith("/global"):
-                            sender, message = msg[5:].split(':', 1)
+                            sender, message = msg[8:].split(':', 1)
 
                             if info["addr"] is None:
                                 info["addr"] = addr
