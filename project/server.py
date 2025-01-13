@@ -1,7 +1,8 @@
 import socket
 import threading
 import logging
-from crypto import AES  # Importar o módulo de criptografia
+from crypto import AES
+from pathlib import Path
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 
@@ -32,7 +33,7 @@ class Server:
 
                 if len(self.CLIENTS) >= self.MAX_CONNECTIONS:
                     logging.warning("Número máximo de conexões atingido.")
-                    conn.sendall("Número máximo de conexões atingido. Tente novamente mais tarde.".encode('utf-8'))
+                    conn.sendall("Número máximo de conexões atingido. Tente novamente mais tarde.\n".encode('utf-8'))
                     conn.close()
                     continue
 
@@ -55,7 +56,7 @@ class Server:
                 if data.startswith("/register"):
                     _, username, password = data.split(' ', 2)
                     if username in self.CREDENTIALS:
-                        conn.sendall(aes.encrypt("Nome de usuário já em uso.").encode('utf-8'))
+                        conn.sendall(aes.encrypt("Nome de usuário já em uso.\n").encode('utf-8'))
                     else:
                         self.CREDENTIALS[username] = password
                         self.CLIENTS[username] = {"tcp": conn, "addr": None, "aes": aes}
@@ -73,7 +74,7 @@ class Server:
                         self.handleTCP(conn, username)
                         break
                     else:
-                        conn.sendall(aes.encrypt("Credenciais inválidas.").encode('utf-8'))
+                        conn.sendall(aes.encrypt("Credenciais inválidas.\n").encode('utf-8'))
                 else:
                     conn.sendall(aes.encrypt("Comando inválido.").encode('utf-8'))
         except Exception as e:
@@ -84,17 +85,20 @@ class Server:
         try:
             while True:
                 encrypted_data = conn.recv(1024)
-                if not encrypted_data:
-                    break
+                if not encrypted_data: break
 
                 msg = aes.decrypt(encrypted_data.decode('utf-8'))
-                if msg.startswith("/tcp"):
+                if msg.startswith("/privado"):
                     _, recipient, message = msg.split(' ', 2)
                     self.send_direct_message(username, recipient, message)
+                    
+                elif msg.startswith("/sendfile"):
+                    _, recipient, filename, content = msg.split(' ', 3)
+                    self.sendFile(username, recipient, filename, content) # Enviar arquivo ao destinatário
 
                 elif msg.startswith("/logout"):
                     logging.info(f"{username} se desconectou do servidor.")
-                    conn.sendall(aes.encrypt("Você foi deslogado com sucesso.").encode('utf-8'))
+                    conn.sendall(aes.encrypt("Você foi deslogado com sucesso. \n").encode('utf-8'))
                     break
 
         except ConnectionResetError:
@@ -114,7 +118,7 @@ class Server:
                     aes = info["aes"]
                     try:
                         msg = aes.decrypt(encrypted_msg)
-                        if msg.startswith("/udp"):
+                        if msg.startswith("/global"):
                             sender, message = msg[5:].split(':', 1)
 
                             if info["addr"] is None:
@@ -140,7 +144,7 @@ class Server:
             logging.warning(f"Destinatário {recipient} não encontrado.")
             if sender in self.CLIENTS and self.CLIENTS[sender]["tcp"]:
                 sender_aes = self.CLIENTS[sender]["aes"]
-                self.CLIENTS[sender]["tcp"].sendall(sender_aes.encrypt("Usuário não encontrado.").encode('utf-8'))
+                self.CLIENTS[sender]["tcp"].sendall(sender_aes.encrypt("Usuário não encontrado. \n").encode('utf-8'))
 
     def send_message_to_all(self, sender, message):
         for username, info in self.CLIENTS.items():
@@ -151,7 +155,22 @@ class Server:
                     self.UDP.sendto(encrypted_message.encode('utf-8'), info["addr"])
                     logging.info(f"Mensagem global enviada de {sender} para {username}: {message}")
                 except Exception as e:
-                    logging.warning(f"Erro ao enviar mensagem UDP para {username}: {e}")
+                    logging.warning(f"Erro ao enviar mensagem UDP para {username}: {e}\n")
+                    
+    def sendFile(self, sender, recipient, filename, content):
+        if recipient in self.CLIENTS and self.CLIENTS[recipient]["tcp"]:
+            conn = self.CLIENTS[recipient]["tcp"]
+            aes = self.CLIENTS[recipient]["aes"]
+
+            # Formatar mensagem para o destinatário
+            encrypted_message = aes.encrypt(f"/file {sender} {filename} {content}")
+            conn.sendall(encrypted_message.encode('utf-8'))
+            logging.info(f"Arquivo '{filename}' enviado de {sender} para {recipient}.")
+        else:
+            logging.warning(f"Destinatário {recipient} não encontrado.")
+            if sender in self.CLIENTS and self.CLIENTS[sender]["tcp"]:
+                sender_aes = self.CLIENTS[sender]["aes"]
+                self.CLIENTS[sender]["tcp"].sendall(sender_aes.encrypt("Usuário não encontrado. \n").encode('utf-8'))
 
 if __name__ == "__main__":
     server = Server()
